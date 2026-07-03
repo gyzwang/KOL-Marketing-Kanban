@@ -1,0 +1,17 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Audio files (do not upload raw audio source to GitHub)
+*.m4a
+*.mp3
+*.wav
+
+# Local caches
+__pycache__/
+*.pyc

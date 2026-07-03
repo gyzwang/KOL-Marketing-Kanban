@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>达人营销运营看板 - 自定义可视化大屏</title>
+    <!-- 引入 FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入自定义样式 -->
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+    <!-- 背景漫反射光晕 -->
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <!-- 1. 左侧导航栏 -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <i class="fa-solid fa-chart-line logo-icon"></i>
+            <span class="logo-text">KOL Marketing</span>
+        </div>
+        <ul class="menu-list">
+            <li class="menu-item active" data-tab="dashboard-tab">
+                <i class="fa-solid fa-gauge"></i>
+                <span>工作控制台</span>
+            </li>
+            <li class="menu-item" data-tab="kanban-tab">
+                <i class="fa-solid fa-square-poll-horizontal"></i>
+                <span>任务看板</span>
+            </li>
+            <li class="menu-item" data-tab="material-tab">
+                <i class="fa-solid fa-video"></i>
+                <span>物料流水线</span>
+            </li>
+            <li class="menu-item" data-tab="kol-tab">
+                <i class="fa-solid fa-users"></i>
+                <span>达人管理</span>
+            </li>
+            <li class="menu-item" data-tab="budget-tab">
+                <i class="fa-solid fa-wallet"></i>
+                <span>预算中心</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="update-time">
+                <span>🔄 上次更新时间:</span>
+                <strong id="sync-time-label">正在同步数据...</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 右侧主内容展示区 -->
+    <div class="main-content">
+        <header>
+            <div class="page-title">
+                <h1 id="page-main-title">工作控制台</h1>
+                <p id="page-subtitle">达人营销项目核心运营数据大盘</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-primary" onclick="triggerRefresh()">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>同步飞书数据</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ==========================================
+             📊 控制台 (Dashboard Tab)
+             ========================================== -->
+        <div id="dashboard-tab" class="tab-content active">
+            <!-- 核心数据汇总指标 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>进行中任务</p>
+                        <div class="stat-value" id="dashboard-active-tasks">-</div>
+                    </div>
+                    <div class="stat-icon primary">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>已延期任务</p>
+                        <div class="stat-value" id="dashboard-overdue-tasks">-</div>
+                    </div>
+                    <div class="stat-icon danger">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>预算总体消耗</p>
+                        <div class="stat-value" id="dashboard-budget-ratio">-</div>
+                    </div>
+                    <div class="stat-icon warning">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>合作达人总数</p>
+                        <div class="stat-value" id="dashboard-kols-count">-</div>
+                    </div>
+                    <div class="stat-icon success">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 核心图表 & 风险区域 -->
+            <div class="dashboard-grid">
+                <!-- 左：物料状态流水线进度 -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-circle-nodes"></i>
+                            <span>内容物料流水线负荷</span>
+                        </div>
+                    </div>
+                    <div class="pipeline-track" id="dashboard-pipeline-list">
+                        <!-- 动态填充物料进度条 -->
+                    </div>
+                </div>
+                <!-- 右：延期与高危拦截清单 -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i>
+                            <span>异常预警与断更拦截</span>
+                        </div>
+                    </div>
+                    <div class="risk-list" id="dashboard-risk-list">
+                        <!-- 动态填充延期或失联记录 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             📋 任务看板 (Kanban Tab)
+             ========================================== -->
+        <div id="kanban-tab" class="tab-content">
+            <div class="kanban-board">
+                <!-- 待处理 -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <span class="column-title">📋 待处理</span>
+                        <span class="column-count" id="count-todo">0</span>
+                    </div>
+                    <div class="kanban-cards" id="col-todo"></div>
+                </div>
+                <!-- 进行中 -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <span class="column-title">⚡ 进行中</span>
+                        <span class="column-count" id="count-doing">0</span>
+                    </div>
+                    <div class="kanban-cards" id="col-doing"></div>
+                </div>
+                <!-- 待审核 -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <span class="column-title">🔎 待审核</span>
+                        <span class="column-count" id="count-review">0</span>
+                    </div>
+                    <div class="kanban-cards" id="col-review"></div>
+                </div>
+                <!-- 已完成 / 已延期 -->
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <span class="column-title">⚠️ 延期/完成</span>
+                        <span class="column-count" id="count-done">0</span>
+                    </div>
+                    <div class="kanban-cards" id="col-done"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             📦 物料流水线 (Material Tab)
+             ========================================== -->
+        <div id="material-tab" class="tab-content">
+            <div class="material-pipeline">
+                <div class="pipeline-flow">
+                    <!-- 1. 待接收 -->
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <span>📥 待接收素材</span>
+                            <span class="column-count" id="m-count-1">0</span>
+                        </div>
+                        <div class="kanban-cards" id="m-col-1"></div>
+                    </div>
+                    <!-- 2. 剪辑中 -->
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <span>✂️ 剪辑/优化中</span>
+                            <span class="column-count" id="m-count-2">0</span>
+                        </div>
+                        <div class="kanban-cards" id="m-col-2"></div>
+                    </div>
+                    <!-- 3. 封面/标题 -->
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <span>🎨 封面/标题</span>
+                            <span class="column-count" id="m-count-3">0</span>
+                        </div>
+                        <div class="kanban-cards" id="m-col-3"></div>
+                    </div>
+                    <!-- 4. 待审核 -->
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <span>👀 待审核</span>
+                            <span class="column-count" id="m-count-4">0</span>
+                        </div>
+                        <div class="kanban-cards" id="m-col-4"></div>
+                    </div>
+                    <!-- 5. 已发布 -->
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <span>🚀 已发布</span>
+                            <span class="column-count" id="m-count-5">0</span>
+                        </div>
+                        <div class="kanban-cards" id="m-col-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             👤 达人管理 (KOL Tab)
+             ========================================== -->
+        <div id="kol-tab" class="tab-content">
+            <div class="kol-table-container">
+                <table class="kol-table">
+                    <thead>
+                        <tr>
+                            <th>达人名称</th>
+                            <th>平台</th>
+                            <th>粉丝量</th>
+                            <th>对接人</th>
+                            <th>合作类型</th>
+                            <th>状态</th>
+                            <th>交付物料</th>
+                            <th>近期沟通记录</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kol-table-body">
+                        <!-- 动态渲染达人行 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             💰 预算中心 (Budget Tab)
+             ========================================== -->
+        <div id="budget-tab" class="tab-content">
+            <div class="budget-overview-grid">
+                <!-- 圆环进度 -->
+                <div class="panel-card budget-total-gauge">
+                    <div class="panel-title">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>总体消耗健康度</span>
+                    </div>
+                    <div class="gauge-circle-container">
+                        <svg class="gauge-svg" width="160" height="160" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6366f1" />
+                                    <stop offset="100%" stop-color="#a855f7" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="gauge-circle-bg" cx="80" cy="80" r="70" />
+                            <circle class="gauge-circle-fill" id="budget-gauge-fill" cx="80" cy="80" r="70" />
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-percentage" id="budget-gauge-pct">0%</div>
+                            <div class="gauge-label">已使用</div>
+                        </div>
+                    </div>
+                    <div class="budget-sums" style="text-align:center;">
+                        <p style="color:var(--text-secondary);font-size:12px;">总预算 vs 已花费</p>
+                        <strong style="font-size:18px;font-family:'Outfit';color:#fff;margin-top:6px;display:block;" id="budget-ratio-label">¥0 / ¥0</strong>
+                    </div>
+                </div>
+
+                <!-- 目标与动作映射 -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <i class="fa-solid fa-bullseye"></i>
+                            <span>目标 - 运营动作 - 预算成本映射</span>
+                        </div>
+                    </div>
+                    <div class="mapping-grid" id="budget-mapping-list">
+                        <!-- 动态渲染映射卡片 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 静态数据载入 -->
+    <script src="scripts/data.js"></script>
+    <!-- 渲染脚本 -->
+    <script src="scripts/render.js"></script>
+    <script>
+        // 自动刷新机制的过渡提示
+        function triggerRefresh() {
+            alert("正在运行本地刷新命令，请在打开的终端窗口或 agy 中允许运行 refresh.sh！");
+        }
+    </script>
+</body>
+</html>
