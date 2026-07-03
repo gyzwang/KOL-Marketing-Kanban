@@ -16,8 +16,8 @@ if [ $? -eq 0 ]; then
     echo "==========================================="
     echo "✅ 同步成功！正在打开看板主页面..."
     echo "==========================================="
-    # 在 Mac 上打开 index.html
-    open index.html
+    # 打开部署在 GitHub Pages 的公网地址
+    open "https://gyzwang.github.io/KOL-Marketing-Kanban/"
 else
     echo "❌ 同步失败，请检查网络连接及 lark-cli 登录状态。"
 fi
